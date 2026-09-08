@@ -1,0 +1,415 @@
+%% ============================================================
+%%  Reading notes — What Can MPNNs Compute?
+%%  A computability hierarchy for message-passing neural networks
+%%  Based on: Wittig, Vasileiou, Nerem et al., ICML 2026 (arXiv:2602.13106)
+%%  Layout: ported from talk.tex (S+SSPR 2026 airline-clustering talk)
+%%  Compile: lualatex mpnn_talk.tex
+%% ============================================================
+\documentclass[10pt,aspectratio=169,draft]{beamer}
+
+\usepackage{asc-theme}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{calc, positioning, arrows.meta}
+
+%% ── Helper commands ──────────────────────────────────────────
+\newcommand{\pcite}[1]{\textsuperscript{[#1]}}
+
+\title[What Can MPNNs Compute?]%
+  {What Can MPNNs Compute? A Computability Hierarchy for Message-Passing Neural Networks}
+\author{Andreas Schlapbach (schlpbch@gmail.com)}
+\date{Reading notes --- 2026-09-08}
+
+\begin{document}
+
+%% ---------------------------------------------------------------
+\begin{frame}[plain]
+  \vspace*{0.9cm}
+  {\plexmedium\small\color{ascTeal600}Reading notes --- ICML 2026, arXiv:2602.13106\par}
+  \vspace{0.35cm}
+  {\usebeamerfont{title}\usebeamercolor[fg]{title}%
+    What Can MPNNs Compute? A Computability Hierarchy for Message-Passing Neural Networks\par}
+  \vspace{0.18cm}
+  {\color{ascTeal500}\rule{28pt}{2.4pt}\par}
+  \vspace{0.90cm}
+  {\usebeamerfont{author}\usebeamercolor[fg]{author}\teal{Andreas Schlapbach}\par}
+  \vspace{0.10cm}
+  {\usebeamerfont{institute}\usebeamercolor[fg]{institute}%
+    Reading notes}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{Two Different Questions}
+  This deck answers the second one, using only the architecture's own structure.
+  \vspace{0.25cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \teal{Learning}
+      \begin{itemize}
+        \item Given finite training data, can an MPNN learn parameters that approximate a target algorithm?
+        \item Does that approximation generalize to graphs far larger than any seen in training?
+        \item Answered via finite Lipschitz classes and covering numbers\pcite{1}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \teal{Computability}
+      \begin{itemize}
+        \item Independent of any training: what class of functions can the architecture represent at all?
+        \item Fixed depth, no loops, no recursion --- a structural ceiling that exists before training starts.
+        \item Placed on the classical recursive-function hierarchy\pcite{15}.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{The Containment Hierarchy}
+  Each ring is a strict superset of the ring inside it.
+  \vspace{0.1cm}
+  \begin{columns}[T]
+    \begin{column}{0.4\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \draw[draw=ascSlate400, line width=0.9pt] (0,0) circle (2.35cm);
+        \draw[draw=ascSlate400, line width=0.9pt] (0,0) circle (1.85cm);
+        \draw[draw=ascSlate400, line width=0.9pt] (0,0) circle (1.35cm);
+        \draw[draw=ascSlate400, line width=0.9pt] (0,0) circle (0.85cm);
+        \draw[fill=ascTeal500, draw=ascTeal600, line width=0.9pt] (0,0) circle (0.4cm);
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \small
+      \begin{description}
+        \item[Partial recursive] \muted{May never halt; undecidable domains\pcite{15}}
+        \item[Total recursive] \muted{Always halts, unbounded loops allowed\pcite{15}}
+        \item[Primitive recursive] \muted{Unbounded loop nesting\pcite{15}}
+        \item[$L$-local] \muted{Fixed number of composition rounds\pcite{3--6}}
+        \item[\teal{MPNN-$L$-computable}] \muted{This paper's architecture\pcite{1,2}}
+      \end{description}
+    \end{column}
+  \end{columns}
+  \vspace{0.15cm}
+  {\footnotesize\muted{Fixed depth $L$ keeps the model in the innermost ring --- far from the undecidable outer boundary.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{Outer Rings: What ``Total'' Buys You}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Partial recursive (semi-recursive)}
+      \begin{itemize}
+        \item Computed by a Turing machine that may not halt on every input\pcite{15}
+        \item Domain can be undecidable --- e.g.\ the halting problem's characteristic function\pcite{15}
+        \item Requires an unbounded, input-dependent runtime
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Total recursive}
+      \begin{itemize}
+        \item Always halts --- no undecidable domains\pcite{15}
+        \item Still permits unbounded loops / recursion depth chosen at runtime
+        \item MPNNs here are always total: fixed depth guarantees termination
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.3cm}
+  {\footnotesize\muted{Both stay within the total-vs-partial boundary --- the split that matters for whether the architecture can even represent non-termination.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{Inner Rings: Bounding the Loop Structure}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Primitive recursive}
+      \begin{itemize}
+        \item Total, but allows arbitrarily deep nested loops
+        \item Excludes only extreme-growth functions (e.g.\ Ackermann)\pcite{15}
+        \item Still has no fixed bound on composition depth
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Bounded-quantifier-rank, $L$-local}
+      \begin{itemize}
+        \item Functions determined entirely by an $L$-hop neighborhood\pcite{6}
+        \item Matches $L$ rounds of 1-WL / 1-iWL / (1,1)-WL colour refinement\pcite{3--5}
+        \item $L$ is fixed in advance --- independent of graph size
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.3cm}
+  {\footnotesize\muted{No loop construct at all: $L$ is the literal, total number of composition steps in the program text.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{The Innermost Ring: MPNN-$L$-Computable}
+  \[
+    h_v^{(t)} := \varphi_t\!\left(h_v^{(t-1)},\; \mathrm{AGG}\{(h_u^{(t-1)}, w(u,v)) : u \in N(v)\}\right),
+    \qquad f(G,v) = h_v^{(L)}
+  \]
+  {\footnotesize\muted{$L$ fixed in advance, independent of $|V(G)|$ --- composed exactly $L$ times, no loop.\pcite{2}}}
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Expressivity ceiling}
+      \begin{itemize}
+        \small
+        \item No fixed-depth standard MPNN can express exact SSSP or MST cost\pcite{1,7}
+        \item Distinguishing power bounded by 1-WL after $L$ rounds\pcite{4,5}
+        \item More expressive variants (1-iWL, (1,1)-WL) push the ceiling but stay bounded\pcite{1}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{What \emph{is} computable at depth $L$}
+      \begin{itemize}
+        \small
+        \item $K$-step Bellman--Ford, when $L=K$ (min-aggregation)\pcite{8}
+        \item 0-1 knapsack DP, reduced to a $K$-stage shortest path\pcite{1}
+        \item Truncated PageRank to depth $K$ (mean-aggregation)\pcite{9}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}[plain]
+  \vspace*{1.5cm}
+  \centering
+  {\usebeamerfont{title}\usebeamercolor[fg]{title}From Computability to Process Calculi\par}
+  \vspace{0.18cm}
+  {\color{ascTeal500}\rule{28pt}{2.4pt}\par}
+  \vspace{0.5cm}
+  \begin{minipage}{0.75\textwidth}
+    \centering\large\muted{The result so far is the paper's. What follows is this deck's own
+    attempt to place MPNN-$L$ on the process-calculus map.}
+  \end{minipage}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{CCS vs.\ $\pi$-Calculus: Which Fits Tightest?}
+  The graph never changes shape mid-computation --- so which calculus should carry that fact?
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \teal{CCS}
+      \begin{itemize}
+        \small
+        \item Channels are static --- fixed at definition time, never created or sent as messages\pcite{10}
+        \item Matches MPNN-$L$ exactly: the graph's topology never changes across the $L$ rounds
+        \item Needs only the standard value-passing extension to carry hidden states as data\pcite{10}
+        \item Boundary: even guarded self-recursion stays decidable --- MPNN-$L$ sits below that too\pcite{12}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \teal{$\pi$-Calculus}
+      \begin{itemize}
+        \small
+        \item Adds mobility --- power the architecture never exercises\pcite{11}
+        \item Channel names can be created and passed as messages, so topology can change at runtime\pcite{11}
+        \item MPNN-$L$ never sends a channel as a value --- only hidden-state data ever travels
+        \item Boundary: unguarded replication $!P$ unlocks Turing-completeness\pcite{11}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.3cm}
+  {\footnotesize\muted{CCS's static channels are the closer match --- mobility is real expressive power MPNN-$L$ never touches.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{One Boundary, Four Formalisms}
+  Same fixed point, expressed in four different process/term calculi.
+  \vspace{0.15cm}
+  \begin{center}
+  \footnotesize
+  \begin{tabular}{@{}l p{5.6cm} p{4.4cm}@{}}
+  \toprule
+  \textbf{Formalism} & \textbf{What unlocks Turing-completeness} & \textbf{MPNN-$L$'s fragment} \\
+  \midrule
+  $\lambda$-calculus & Fixed-point combinator $Y$ (or \texttt{fix})\pcite{14} &
+    Closed Church numeral $\lceil L \rceil$ --- no $Y$ anywhere \\
+  CCS & General recursive agent equations $A \stackrel{\mathrm{def}}{=} \ldots A \ldots$
+    (esp.\ with value-passing)\pcite{10,12} &
+    Zero agent identifiers after inlining --- one closed, finite term \\
+  $\pi$-calculus & Unguarded replication $!P$\pcite{11} &
+    Finite parallel composition --- no $!$ anywhere \\
+  $\rho$-calculus & Quoting + persistent receive $\mathrm{for}(y\Leftarrow x)$\pcite{13} &
+    No self-quoting, no $\Leftarrow$ anywhere \\
+  \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.2cm}
+  {\footnotesize\muted{CCS's channels never move, $\pi$-calculus's channels can --- that single extra rule is the whole difference between them.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{Mapping MPNN-$L$ onto CCS}
+  A chain of $L$ distinct agent definitions plays the role of $L$ rounds.
+  \vspace{0.1cm}
+  \begin{columns}[T]
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      \begin{tabular}{@{}p{2.5cm}p{3.0cm}@{}}
+      \toprule
+      \textbf{MPNN-$L$} & \textbf{CCS} \\
+      \midrule
+      Vertex & Agent (process constant) \\
+      Edge to neighbor & Port $\mathrm{send}_{v,u}$ \\
+      Hidden state $h$ & Value on a value-passing action \\
+      AGG+UPDATE round & Agent def.\ $R_v^t$ \\
+      Graph topology & Static port set \\
+      \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{exampleblock}{}
+        \scriptsize
+        $R_v^t(h) \stackrel{\mathrm{def}}{=} \mathrm{recv}_u^t(x).$\\
+        \hspace*{0.6cm}$\bigl(\mathrm{send}_u^t!h \mid R_v^{t+1}(\varphi(h,x))\bigr)$
+
+        \vspace{0.15cm}
+        $R_v^L(h) \stackrel{\mathrm{def}}{=} \mathrm{out}_v!h.\,\mathbf{0}$
+      \end{exampleblock}
+      \begin{exampleblock}{Caveat}
+        \footnotesize Pure CCS carries no data --- this uses the standard
+        value-passing extension. No channel name is ever sent, only data:
+        exactly the mobility CCS omits and MPNN-$L$ never needs.
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+  \vspace{0.15cm}
+  {\footnotesize\muted{$R_v^t$ refers only to $R_v^{t+1}$, never back to itself or an earlier round --- the chain is acyclic, so unfolding it always terminates after exactly $L$ steps.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{Finite CCS: The Tightest Fragment}
+  Not just guarded recursion --- zero agent identifiers, period.
+  \vspace{0.25cm}
+  \begin{center}
+  \begin{tabular}{@{}p{10.6cm}@{}}
+  \toprule
+  \textbf{General recursion} \\
+  \footnotesize $A \stackrel{\mathrm{def}}{=} \ldots A \ldots$, unguarded --- Turing-complete;
+  bisimilarity and termination undecidable\pcite{12} \\
+  \bottomrule
+  \end{tabular}
+
+  \vspace{0.18cm}
+  \hspace{1.1cm}\begin{tabular}{@{}p{8.4cm}@{}}
+  \toprule
+  \textbf{Guarded recursion (regular CCS)} \\
+  \footnotesize Self-reference allowed, but always behind a prefix ---
+  finite-state, decidable, still self-referential\pcite{12} \\
+  \bottomrule
+  \end{tabular}
+
+  \vspace{0.18cm}
+  \hspace{2.4cm}\begin{tabular}{@{}p{5.8cm}@{}}
+  \toprule
+  \teal{Finite CCS --- zero agent identifiers} \\
+  \footnotesize MPNN-$L$, after inlining: one closed, finite term ---
+  $R_v^0 \to R_v^1 \to \cdots \to R_v^L$ \\
+  \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.15cm}
+  {\footnotesize\muted{The named agents were doing a let-binding's job, not recursion's --- acyclic, bounded by the literal constant $L$.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{Nowhere Near the Undecidable Frontier}
+  \begin{enumerate}
+    \item \textbf{Fixed depth always total $\Rightarrow$ never semi-recursive.}
+      The architecture can't even express non-termination.
+    \item \textbf{No loops $\to$ far below primitive recursive.}
+      $L$ composition steps in the program text, not a runtime-bounded iteration.
+    \item \textbf{Only $L$-local invariants.}
+      Even simple total, polynomial-time functions like exact SSSP or MST cost
+      fall outside a fixed-depth model.
+  \end{enumerate}
+  \vspace{0.4cm}
+  {\muted{Learnability is a separate, later question --- this is the ceiling before training even starts.}}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{A Note on What the Author's Contribution}
+  \begin{itemize}
+    \item[{\color{ascTeal600}\checkmark}] \textbf{Slides 2--6 follow the paper.}
+      The recursive-function hierarchy placement, the WL correspondence, and
+      the algorithm examples (SSSP, MST, Bellman--Ford, knapsack, PageRank)
+      follow the stated framework and results of Wittig et al.\pcite{1},
+      drawing on the standard GNN-expressivity literature\pcite{2--9} and the
+      classical computability hierarchy\pcite{15}.
+    \item[{\color{ascSlate400}$\circ$}] \textbf{Slides 8--11 are this deck's own synthesis.}
+      Mapping the paper's computability placement onto CCS\pcite{10}, the
+      $\pi$-calculus\pcite{11}, and the $\rho$-calculus\pcite{13}, using the
+      classical decidability results for guarded recursion\pcite{12} and the
+      $\lambda$-calculus benchmark\pcite{14}. This correspondence is
+      \emph{not} asserted by Wittig et al.\ --- treat it as a proposed
+      encoding, \emph{not} a proven adequacy result. No
+      bisimulation-preservation or full-abstraction argument is given for
+      the mapping on slide 10.
+  \end{itemize}
+\end{frame}
+
+
+%% ---------------------------------------------------------------
+\begin{frame}{References}
+  \tiny
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{enumerate}
+        \item Wittig, Vasileiou, Nerem, Stoll, Geerts, Wang, Morris.
+          \emph{Which Algorithms Can Graph Neural Networks Learn?} ICML, 2026.
+        \item Gilmer, Schoenholz, Riley, Vinyals, Dahl. \emph{Neural Message
+          Passing for Quantum Chemistry.} ICML, 2017.
+        \item Weisfeiler, Leman. \emph{The Reduction of a Graph to Canonical
+          Form and the Algebra which Appears Therein.} NTI, Series 2, 1968.
+        \item Xu, Hu, Leskovec, Jegelka. \emph{How Powerful are Graph Neural
+          Networks?} ICLR, 2019.
+        \item Morris, Ritzert, Fey, Hamilton, Lenssen, Rattan, Grohe.
+          \emph{Weisfeiler and Leman Go Neural.} AAAI, 2019.
+        \item Barcel\'o, Kostylev, Monet, P\'erez, Reutter, Silva. \emph{The
+          Logical Expressiveness of Graph Neural Networks.} ICLR, 2020.
+        \item Loukas. \emph{What Graph Neural Networks Cannot Learn: Depth
+          vs Width.} ICLR, 2020.
+        \item Xu, Li, Zhang, Du, Kawarabayashi, Jegelka. \emph{What Can
+          Neural Networks Reason About?} ICLR, 2020.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{enumerate}
+        \setcounter{enumi}{8}
+        \item Klicpera, Bojchevski, G\"unnemann. \emph{Predict then
+          Propagate: GNNs Meet Personalized PageRank.} ICLR, 2019.
+        \item Milner. \emph{A Calculus of Communicating Systems.} LNCS 92,
+          Springer, 1980.
+        \item Milner, Parrow, Walker. \emph{A Calculus of Mobile Processes,
+          I and II.} Information and Computation, 100(1), 1992.
+        \item Aceto, Ing\'olfsd\'ottir, Larsen, Srba. \emph{Reactive
+          Systems: Modelling, Specification and Verification.} Cambridge
+          University Press, 2007.
+        \item Meredith, Radestock. \emph{A Reflective Higher-order
+          Calculus.} ENTCS, 141(5), 2005.
+        \item Church. \emph{An Unsolvable Problem of Elementary Number
+          Theory.} American Journal of Mathematics, 58(2), 1936.
+        \item Rogers. \emph{Theory of Recursive Functions and Effective
+          Computability.} MIT Press, 1967.
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\end{document}
